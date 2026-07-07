@@ -1,0 +1,17 @@
+.env
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+data/processed/
+data/paper_accounts/
+reports/markdown/
+reports/html/
+reports/json/
+reports/charts/
+logs/
+review_*.txt
+*_review_bundle*.md

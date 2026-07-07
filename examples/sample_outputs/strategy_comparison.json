@@ -1,0 +1,50 @@
+[
+  {
+    "strategy": "buy_and_hold",
+    "total_return": 2.586586192008307,
+    "annualized_return": 0.1731644542611268,
+    "annualized_volatility": 0.12981748197008658,
+    "sharpe_ratio": 1.0991348611589389,
+    "sortino_ratio": 1.7788029520431616,
+    "max_drawdown": -0.21070422655642818,
+    "calmar_ratio": 0.8218366431997133,
+    "win_rate_daily": 0.541447053186392,
+    "best_day": 0.03380965375173983,
+    "worst_day": -0.028555104006523058,
+    "turnover": 0.9950816695080047,
+    "number_of_trades": 4.0,
+    "final_value": 358658.6192008307
+  },
+  {
+    "strategy": "periodic_rebalance",
+    "total_return": 1.2039158862151265,
+    "annualized_return": 0.1038601706404656,
+    "annualized_volatility": 0.10212747827000494,
+    "sharpe_ratio": 0.7897174108854167,
+    "sortino_ratio": 1.2627182184072825,
+    "max_drawdown": -0.21032649132052728,
+    "calmar_ratio": 0.4938045131090395,
+    "win_rate_daily": 0.5385721130809775,
+    "best_day": 0.02509335483102415,
+    "worst_day": -0.0275792975019461,
+    "turnover": 5.109501823085828,
+    "number_of_trades": 372.0,
+    "final_value": 220391.58862151264
+  },
+  {
+    "strategy": "trend_filter",
+    "total_return": 1.1926704178693086,
+    "annualized_return": 0.10315429738918636,
+    "annualized_volatility": 0.08665070734054388,
+    "sharpe_ratio": 0.906744536928391,
+    "sortino_ratio": 1.4824251595495717,
+    "max_drawdown": -0.1417952560000778,
+    "calmar_ratio": 0.7274876487343819,
+    "win_rate_daily": 0.5275515093435553,
+    "best_day": 0.025134970444966598,
+    "worst_day": -0.01956261544814386,
+    "turnover": 57.14042244231108,
+    "number_of_trades": 191.0,
+    "final_value": 219267.04178693084
+  }
+]

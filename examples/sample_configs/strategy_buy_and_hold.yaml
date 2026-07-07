@@ -1,0 +1,4 @@
+name: buy_and_hold
+type: buy_and_hold
+transaction_cost_bps: 5
+slippage_bps: 5

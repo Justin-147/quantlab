@@ -1,0 +1,11 @@
+risk_limits:
+  max_single_asset_weight: 0.40
+  max_equity_weight: 0.85
+  max_technology_weight: 0.45
+  min_cash_weight: 0.00
+  max_turnover_monthly: 0.50
+  max_drawdown_alert: 0.20
+  no_leverage: true
+  live_trading_enabled: false
+  broker_execution_enabled: false
+  manual_confirmation_required: true

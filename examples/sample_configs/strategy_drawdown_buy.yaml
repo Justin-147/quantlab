@@ -1,0 +1,14 @@
+name: drawdown_buy
+type: drawdown_buy
+reference_asset: SPY
+transaction_cost_bps: 5
+slippage_bps: 5
+drawdown_triggers:
+  - drawdown: 0.10
+    action: add_to_spy
+    amount_pct_of_cash: 0.20
+  - drawdown: 0.15
+    action: add_to_spy
+    amount_pct_of_cash: 0.30
+  - drawdown: 0.20
+    action: risk_review

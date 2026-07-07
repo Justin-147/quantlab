@@ -1,0 +1,6 @@
+name: periodic_rebalance
+type: periodic_rebalance
+rebalance_frequency: monthly
+rebalance_threshold: 0.05
+transaction_cost_bps: 5
+slippage_bps: 5

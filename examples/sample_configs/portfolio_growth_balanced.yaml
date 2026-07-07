@@ -1,0 +1,8 @@
+name: growth_balanced
+currency: USD
+initial_cash: 100000
+target_weights:
+  SPY: 0.45
+  QQQ: 0.25
+  BND: 0.20
+  GLD: 0.10

@@ -1,0 +1,17 @@
+name: trend_filter
+type: trend_filter
+signal_asset: SPY
+moving_average_window: 200
+cooldown_days: 20
+transaction_cost_bps: 5
+slippage_bps: 5
+risk_on_weights:
+  SPY: 0.45
+  QQQ: 0.25
+  BND: 0.20
+  GLD: 0.10
+risk_off_weights:
+  SPY: 0.25
+  QQQ: 0.05
+  BND: 0.50
+  GLD: 0.20

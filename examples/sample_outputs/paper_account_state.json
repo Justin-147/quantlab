@@ -1,0 +1,22 @@
+{
+  "account_id": "paper_growth_balanced_0a8f647e",
+  "date": "2025-12-31T00:00:00",
+  "cash": 100000.0,
+  "positions": {},
+  "pending_orders": [],
+  "fills": [],
+  "equity_history": [
+    {
+      "date": "2025-12-31",
+      "cash": 100000.0,
+      "market_value": 0,
+      "total_value": 100000.0
+    }
+  ],
+  "risk_status": "ok",
+  "notes": [
+    "Local paper simulation only. No broker connection exists.",
+    "Paper day processed locally; no real orders were submitted.",
+    "Strategy selected for paper review: trend_filter"
+  ]
+}

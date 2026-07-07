@@ -1,0 +1,28 @@
+portfolios:
+  balanced_6040:
+    name: balanced_6040
+    currency: USD
+    initial_cash: 100000
+    target_weights:
+      SPY: 0.60
+      BND: 0.40
+  growth_balanced:
+    name: growth_balanced
+    currency: USD
+    initial_cash: 100000
+    target_weights:
+      SPY: 0.45
+      QQQ: 0.25
+      BND: 0.20
+      GLD: 0.10
+  ai_tilt:
+    name: ai_tilt
+    currency: USD
+    initial_cash: 100000
+    target_weights:
+      SPY: 0.35
+      QQQ: 0.30
+      NVDA: 0.10
+      MSFT: 0.10
+      BND: 0.10
+      GLD: 0.05

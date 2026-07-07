@@ -1,0 +1,46 @@
+strategies:
+  buy_and_hold:
+    name: buy_and_hold
+    type: buy_and_hold
+    transaction_cost_bps: 5
+    slippage_bps: 5
+  periodic_rebalance:
+    name: periodic_rebalance
+    type: periodic_rebalance
+    rebalance_frequency: monthly
+    rebalance_threshold: 0.05
+    transaction_cost_bps: 5
+    slippage_bps: 5
+  trend_filter:
+    name: trend_filter
+    type: trend_filter
+    signal_asset: SPY
+    moving_average_window: 200
+    cooldown_days: 20
+    transaction_cost_bps: 5
+    slippage_bps: 5
+    risk_on_weights:
+      SPY: 0.45
+      QQQ: 0.25
+      BND: 0.20
+      GLD: 0.10
+    risk_off_weights:
+      SPY: 0.25
+      QQQ: 0.05
+      BND: 0.50
+      GLD: 0.20
+  drawdown_buy:
+    name: drawdown_buy
+    type: drawdown_buy
+    reference_asset: SPY
+    transaction_cost_bps: 5
+    slippage_bps: 5
+    drawdown_triggers:
+      - drawdown: 0.10
+        action: add_to_spy
+        amount_pct_of_cash: 0.20
+      - drawdown: 0.15
+        action: add_to_spy
+        amount_pct_of_cash: 0.30
+      - drawdown: 0.20
+        action: risk_review

@@ -1,0 +1,6 @@
+name: balanced_6040
+currency: USD
+initial_cash: 100000
+target_weights:
+  SPY: 0.60
+  BND: 0.40
