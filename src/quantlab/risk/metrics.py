@@ -45,7 +45,8 @@ def calculate_metrics(
     var_95 = float(returns.quantile(0.05)) if not returns.empty else 0.0
     cvar_95 = float(returns[returns <= var_95].mean()) if not returns.empty else 0.0
     rolling_vol = returns.rolling(63).std(ddof=0) * math.sqrt(trading_days_per_year)
-    monthly_returns = df.set_index("date")["total_value"].resample("M").last().pct_change().dropna()
+    monthly_values = df.groupby(df["date"].dt.to_period("M"))["total_value"].last()
+    monthly_returns = monthly_values.pct_change().dropna()
 
     metrics = {
         "total_return": total_return,
