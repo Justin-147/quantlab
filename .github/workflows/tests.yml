@@ -1,0 +1,52 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install package
+        run: python -m pip install -e .[dev]
+
+      - name: Ruff
+        run: ruff check .
+
+      - name: Compile
+        run: python -m compileall src tests scripts
+
+      - name: Mypy
+        run: mypy src/quantlab
+
+      - name: Pytest
+        run: pytest
+
+      - name: Validate config
+        run: python -m quantlab.main validate
+
+      - name: Validate sample data
+        run: python -m quantlab.main validate-data --data examples/sample_data/prices_sample.csv
+
+      - name: CLI smoke backtest
+        run: python -m quantlab.main backtest --portfolio growth_balanced --strategy periodic_rebalance --data examples/sample_data/prices_sample.csv --as-of 2026-07-06 --output-root .tmp/ci-output
+
+      - name: CLI smoke compare
+        run: python -m quantlab.main compare --portfolio growth_balanced --strategies buy_and_hold periodic_rebalance trend_filter --data examples/sample_data/prices_sample.csv --as-of 2026-07-06 --output-root .tmp/ci-output
+
+      - name: Build package
+        run: python -m build

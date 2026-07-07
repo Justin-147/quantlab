@@ -9,8 +9,10 @@ import pandas as pd
 from quantlab.backtest.execution import execute_orders
 from quantlab.config import load_assets, load_backtest_settings, load_risk_limits
 from quantlab.data.loader import get_price_matrix
-from quantlab.models import BacktestResult, Order, PortfolioConfig
+from quantlab.models import BacktestResult, Order, OrderEvent, PortfolioConfig
+from quantlab.portfolio.invariants import validate_state_invariants
 from quantlab.portfolio.portfolio import create_initial_state, refresh_state
+from quantlab.risk.benchmark import calculate_benchmark_metrics
 from quantlab.risk.drawdown import calculate_drawdown_curve
 from quantlab.risk.exposure import summarize_exposure
 from quantlab.risk.limits import check_risk_limits
@@ -39,8 +41,15 @@ def run_backtest(
     strategy_type = strategy_config.get("type", strategy_config.get("name", "buy_and_hold"))
     strategy = strategy or get_strategy(strategy_type)
     merged_strategy_config = {**strategy_config, "target_weights": portfolio_config.target_weights}
-    transaction_cost_bps = float(strategy_config.get("transaction_cost_bps", settings.get("default_transaction_cost_bps", 5)))
-    slippage_bps = float(strategy_config.get("slippage_bps", settings.get("default_slippage_bps", 5)))
+    transaction_cost_bps = float(
+        strategy_config.get(
+            "transaction_cost_bps",
+            settings.get("default_transaction_cost_bps", 5),
+        )
+    )
+    slippage_bps = float(
+        strategy_config.get("slippage_bps", settings.get("default_slippage_bps", 5))
+    )
     execution_lag = int(settings.get("execution_lag_days", 1))
 
     state = create_initial_state(portfolio_config, dates[0].to_pydatetime())
@@ -49,12 +58,14 @@ def run_backtest(
     exposures: list[dict[str, Any]] = []
     fills = []
     risk_events: list[dict[str, Any]] = []
+    order_events: list[OrderEvent] = []
+    running_peak = float(state.total_value)
 
     for i, date in enumerate(dates):
         prices = price_matrix.loc[date].dropna().to_dict()
         orders_to_execute = pending_orders.pop(date, [])
         if orders_to_execute:
-            state.cash, state.positions, new_fills = execute_orders(
+            state.cash, state.positions, new_fills, new_order_events = execute_orders(
                 orders_to_execute,
                 date.to_pydatetime(),
                 prices,
@@ -64,8 +75,50 @@ def run_backtest(
                 slippage_bps,
             )
             fills.extend(new_fills)
+            order_events.extend(new_order_events)
 
         state = refresh_state(state, prices, date.to_pydatetime())
+        history = price_matrix.iloc[: i + 1]
+        generated_orders = strategy.generate_orders(
+            date.to_pydatetime(),
+            state,
+            history,
+            merged_strategy_config,
+        )
+        risk_events.extend(strategy.consume_risk_events())
+        if generated_orders:
+            if execution_lag == 0:
+                state.cash, state.positions, new_fills, new_order_events = execute_orders(
+                    generated_orders,
+                    date.to_pydatetime(),
+                    prices,
+                    state.cash,
+                    state.positions,
+                    transaction_cost_bps,
+                    slippage_bps,
+                )
+                fills.extend(new_fills)
+                order_events.extend(new_order_events)
+                state = refresh_state(state, prices, date.to_pydatetime())
+            else:
+                execute_index = i + execution_lag
+                if execute_index < len(dates):
+                    execute_date = dates[execute_index]
+                    pending_orders[execute_date].extend(generated_orders)
+                else:
+                    order_events.extend(
+                        _expired_order_events(date.to_pydatetime(), generated_orders)
+                    )
+
+        for invariant_issue in validate_state_invariants(state, prices):
+            risk_events.append(
+                {
+                    "date": date.strftime("%Y-%m-%d"),
+                    "type": "invariant",
+                    "message": invariant_issue,
+                }
+            )
+
         equity_curve.append(
             {
                 "date": date.strftime("%Y-%m-%d"),
@@ -76,23 +129,20 @@ def run_backtest(
         )
         exposures.append(summarize_exposure(date.strftime("%Y-%m-%d"), state.weights, assets))
 
-        drawdown_now = calculate_drawdown_curve(equity_curve)["drawdown"].iloc[-1]
-        for event in check_risk_limits(state.weights, float(drawdown_now), risk_limits):
+        running_peak = max(running_peak, float(state.total_value))
+        drawdown_now = (
+            float(state.total_value) / running_peak - 1.0
+            if running_peak > 0
+            else 0.0
+        )
+        for event in check_risk_limits(
+            state.weights,
+            drawdown_now,
+            risk_limits,
+            assets=assets,
+        ):
             event["date"] = date.strftime("%Y-%m-%d")
             risk_events.append(event)
-
-        history = price_matrix.iloc[: i + 1]
-        generated_orders = strategy.generate_orders(
-            date.to_pydatetime(),
-            state,
-            history,
-            merged_strategy_config,
-        )
-        risk_events.extend(strategy.consume_risk_events())
-        execute_index = i + execution_lag
-        if execute_index < len(dates):
-            execute_date = dates[execute_index]
-            pending_orders[execute_date].extend(generated_orders)
 
     drawdown_df = calculate_drawdown_curve(equity_curve)
     drawdown_curve = [
@@ -110,6 +160,13 @@ def run_backtest(
         int(settings.get("trading_days_per_year", 252)),
         float(settings.get("risk_free_rate", 0.02)),
     )
+    metrics.update(
+        calculate_benchmark_metrics(
+            equity_curve,
+            price_matrix,
+            benchmark_symbol=str(settings.get("benchmark_symbol", "SPY")),
+        )
+    )
     return BacktestResult(
         portfolio_name=portfolio_config.name,
         strategy_name=strategy_config.get("name", strategy_type),
@@ -120,7 +177,22 @@ def run_backtest(
         equity_curve=equity_curve,
         drawdown_curve=drawdown_curve,
         fills=fills,
+        order_events=order_events,
         metrics=metrics,
         exposures=exposures,
         risk_events=risk_events,
     )
+
+
+def _expired_order_events(date: datetime, orders: list[Order]) -> list[OrderEvent]:
+    return [
+        OrderEvent(
+            date=date,
+            order_id=order.id,
+            symbol=order.symbol,
+            event_type="expired",
+            message="Order expired because no future trading date was available",
+            metadata={"reason": order.reason},
+        )
+        for order in orders
+    ]

@@ -28,6 +28,15 @@ class Strategy:
         self.risk_events.clear()
         return events
 
+    def describe(self, config: dict[str, Any]) -> dict[str, str]:
+        return {
+            "objective": "Evaluate a rule-based portfolio allocation process.",
+            "entry_rule": "Generate simulated orders from historical data only.",
+            "exit_or_rebalance_rule": "Defined by the concrete strategy.",
+            "risk_control": "No leverage and local simulated execution only.",
+            "known_limitations": "Historical simulation is not investment advice.",
+        }
+
 
 def get_strategy(strategy_type: str) -> Strategy:
     if strategy_type == "buy_and_hold":

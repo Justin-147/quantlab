@@ -7,7 +7,6 @@ import yaml
 
 from quantlab.models import AssetConfig, PortfolioConfig
 
-
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 CONFIG_DIR = PROJECT_ROOT / "config"
 
@@ -20,10 +19,7 @@ def load_yaml(path: str | Path) -> dict[str, Any]:
 
 def load_assets(path: str | Path | None = None) -> dict[str, AssetConfig]:
     raw = load_yaml(path or CONFIG_DIR / "assets.yaml").get("assets", {})
-    return {
-        symbol: AssetConfig(symbol=symbol, **values)
-        for symbol, values in raw.items()
-    }
+    return {symbol: AssetConfig(symbol=symbol, **values) for symbol, values in raw.items()}
 
 
 def load_portfolios(path: str | Path | None = None) -> dict[str, PortfolioConfig]:
@@ -43,10 +39,14 @@ def load_strategies(path: str | Path | None = None) -> dict[str, dict[str, Any]]
 
 
 def load_strategy_config(name: str) -> dict[str, Any]:
+    from quantlab.strategies.config_schema import validate_strategy_schema
+
     strategies = load_strategies()
     if name not in strategies:
         raise KeyError(f"Unknown strategy: {name}")
-    return strategies[name]
+    config = strategies[name]
+    validate_strategy_schema(config)
+    return config
 
 
 def load_risk_limits(path: str | Path | None = None) -> dict[str, Any]:

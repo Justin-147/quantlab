@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Any
 
 from quantlab.models import BacktestResult, PaperAccountState
-
+from quantlab.writers.formatting import fmt_number, fmt_pct, md_cell
 
 DISCLAIMER = (
     "This report is for research and education only. It is not investment advice, "
@@ -17,11 +17,16 @@ DISCLAIMER = (
 def build_backtest_report(
     result: BacktestResult,
     chart_paths: dict[str, Path] | None = None,
+    report_date: datetime | None = None,
 ) -> str:
     chart_paths = chart_paths or {}
+    report_date = report_date or datetime.now()
     metrics = result.metrics
     lines = [
-        f"# QuantLab Backtest Report | {result.portfolio_name} | {result.strategy_name} | {datetime.now():%Y-%m-%d}",
+        (
+            f"# QuantLab Backtest Report | {result.portfolio_name} | "
+            f"{result.strategy_name} | {report_date:%Y-%m-%d}"
+        ),
         "",
         "## Executive Summary",
         f"- Portfolio: {result.portfolio_name}",
@@ -35,8 +40,8 @@ def build_backtest_report(
         "## Portfolio and Strategy Setup",
         "| Parameter | Value |",
         "|---|---|",
-        f"| Start date | {result.start_date:%Y-%m-%d} |",
-        f"| End date | {result.end_date:%Y-%m-%d} |",
+        f"| {md_cell('Start date')} | {md_cell(f'{result.start_date:%Y-%m-%d}')} |",
+        f"| {md_cell('End date')} | {md_cell(f'{result.end_date:%Y-%m-%d}')} |",
         f"| Initial value | {result.initial_value:,.2f} |",
         f"| Final value | {result.final_value:,.2f} |",
         "",
@@ -45,7 +50,7 @@ def build_backtest_report(
         "|---|---|",
     ]
     for key, value in metrics.items():
-        lines.append(f"| {key} | {_format_metric(key, value)} |")
+        lines.append(f"| {md_cell(key)} | {md_cell(_format_metric(key, value))} |")
 
     lines.extend(
         [
@@ -64,27 +69,46 @@ def build_backtest_report(
             f"Chart: {chart_paths.get('drawdown', 'reports/charts/drawdown.png')}",
             "",
             "## Trade Summary",
-            "| Date | Symbol | Side | Quantity | Price | Transaction Cost | Slippage Cost | Reason |",
+            (
+                "| Date | Symbol | Side | Quantity | Price | "
+                "Transaction Cost | Slippage Cost | Reason |"
+            ),
             "|---|---|---|---|---|---|---|---|",
         ]
     )
     for fill in result.fills[:80]:
+        fill_date = f"{fill.date:%Y-%m-%d}"
         lines.append(
-            f"| {fill.date:%Y-%m-%d} | {fill.symbol} | {fill.side} | {fill.quantity:.4f} | "
-            f"{fill.price:.2f} | {fill.transaction_cost:.2f} | {fill.slippage_cost:.2f} | {fill.order_id[:8]} |"
+            f"| {md_cell(fill_date)} | {md_cell(fill.symbol)} | {md_cell(fill.side)} | "
+            f"{md_cell(f'{fill.quantity:.4f}')} | {md_cell(f'{fill.price:.2f}')} | "
+            f"{md_cell(f'{fill.transaction_cost:.2f}')} | {md_cell(f'{fill.slippage_cost:.2f}')} | "
+            f"{md_cell(fill.order_id[:8])} |"
         )
     if len(result.fills) > 80:
-        lines.append(f"| ... | ... | ... | ... | ... | ... | ... | {len(result.fills) - 80} more fills |")
+        remaining = len(result.fills) - 80
+        lines.append(f"| ... | ... | ... | ... | ... | ... | ... | {remaining} more fills |")
 
     lines.extend(
         [
+            "",
+            "## Order Events",
+            "| Date | Symbol | Event | Message |",
+            "|---|---|---|---|",
+            *[
+                f"| {md_cell(f'{event.date:%Y-%m-%d}')} | {md_cell(event.symbol)} | "
+                f"{md_cell(event.event_type)} | {md_cell(event.message)} |"
+                for event in result.order_events[:80]
+            ],
             "",
             "## Exposure Analysis",
             "- equity exposure",
             "- bond exposure",
             "- gold exposure",
             "- cash exposure",
-            f"- top asset weights chart: {chart_paths.get('weights', 'reports/charts/weights.png')}",
+            (
+                "- top asset weights chart: "
+                f"{chart_paths.get('weights', 'reports/charts/weights.png')}"
+            ),
             "",
             "## Strategy Interpretation",
             "- What worked: compare return, drawdown, turnover, and exposure against alternatives.",
@@ -99,6 +123,16 @@ def build_backtest_report(
             "- No live trading.",
             "- No investment advice.",
             "",
+            "## Methodology",
+            "- See `docs/methodology.md` for portfolio, execution, and risk calculation notes.",
+            "- See `docs/backtest_assumptions.md` for timing and cost assumptions.",
+            "",
+            "## Data Notice",
+            "- Input data may be synthetic or user supplied and must be validated before use.",
+            "",
+            "## No Live Trading Notice",
+            "- QuantLab does not connect to brokers or submit real-money orders.",
+            "",
             "## Disclaimer",
             DISCLAIMER,
         ]
@@ -106,19 +140,34 @@ def build_backtest_report(
     return "\n".join(lines) + "\n"
 
 
-def build_comparison_report(portfolio_name: str, rows: list[dict[str, Any]], chart_path: Path | None = None) -> str:
+def build_comparison_report(
+    portfolio_name: str,
+    rows: list[dict[str, Any]],
+    chart_path: Path | None = None,
+    report_date: datetime | None = None,
+) -> str:
+    report_date = report_date or datetime.now()
     lines = [
-        f"# QuantLab Strategy Comparison | {portfolio_name} | {datetime.now():%Y-%m-%d}",
+        f"# QuantLab Strategy Comparison | {portfolio_name} | {report_date:%Y-%m-%d}",
         "",
         "## Summary",
-        "| Strategy | Final Value | Annualized Return | Volatility | Max Drawdown | Sharpe | Turnover | Trades |",
+        (
+            "| Strategy | Final Value | Annualized Return | Volatility | "
+            "Max Drawdown | Sharpe | Turnover | Trades |"
+        ),
         "|---|---:|---:|---:|---:|---:|---:|---:|",
     ]
     for row in rows:
+        final_value = f"{row['final_value']:,.2f}"
+        sharpe = f"{row['sharpe_ratio']:.2f}"
+        turnover = f"{row['turnover']:.2f}"
+        trades = f"{row['number_of_trades']:.0f}"
         lines.append(
-            f"| {row['strategy']} | {row['final_value']:,.2f} | {_pct(row['annualized_return'])} | "
-            f"{_pct(row['annualized_volatility'])} | {_pct(row['max_drawdown'])} | "
-            f"{row['sharpe_ratio']:.2f} | {row['turnover']:.2f} | {row['number_of_trades']:.0f} |"
+            f"| {md_cell(row['strategy'])} | {md_cell(final_value)} | "
+            f"{md_cell(_pct(row['annualized_return']))} | "
+            f"{md_cell(_pct(row['annualized_volatility']))} | "
+            f"{md_cell(_pct(row['max_drawdown']))} | "
+            f"{md_cell(sharpe)} | {md_cell(turnover)} | {md_cell(trades)} |"
         )
     lines.extend(
         [
@@ -133,9 +182,10 @@ def build_comparison_report(portfolio_name: str, rows: list[dict[str, Any]], cha
     return "\n".join(lines) + "\n"
 
 
-def build_paper_report(account: PaperAccountState) -> str:
+def build_paper_report(account: PaperAccountState, report_date: datetime | None = None) -> str:
+    report_date = report_date or datetime.now()
     lines = [
-        f"# QuantLab Paper Account Report | {account.account_id} | {datetime.now():%Y-%m-%d}",
+        f"# QuantLab Paper Account Report | {account.account_id} | {report_date:%Y-%m-%d}",
         "",
         "## Account Status",
         f"- Date: {account.date:%Y-%m-%d}",
@@ -153,14 +203,23 @@ def build_paper_report(account: PaperAccountState) -> str:
 
 
 def _format_metric(key: str, value: float) -> str:
-    if key in {"total_return", "annualized_return", "annualized_volatility", "max_drawdown", "win_rate_daily", "best_day", "worst_day"}:
+    percent_keys = {
+        "total_return",
+        "annualized_return",
+        "annualized_volatility",
+        "max_drawdown",
+        "win_rate_daily",
+        "best_day",
+        "worst_day",
+    }
+    if key in percent_keys:
         return _pct(value)
     return _number(value)
 
 
 def _pct(value: float) -> str:
-    return f"{value:.2%}"
+    return fmt_pct(value)
 
 
 def _number(value: float) -> str:
-    return f"{value:,.4f}"
+    return fmt_number(value)

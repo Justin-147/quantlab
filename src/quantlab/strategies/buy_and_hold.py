@@ -13,6 +13,15 @@ from quantlab.strategies.base import Strategy
 class BuyAndHoldStrategy(Strategy):
     name = "buy_and_hold"
 
+    def describe(self, config: dict[str, Any]) -> dict[str, str]:
+        return {
+            "objective": "Hold the configured target allocation through the full test period.",
+            "entry_rule": "Buy target weights at the first available simulated execution.",
+            "exit_or_rebalance_rule": "No scheduled exits or rebalances.",
+            "risk_control": "No leverage; purchases are constrained by available cash.",
+            "known_limitations": "Does not adapt to drawdown, trend, or valuation changes.",
+        }
+
     def generate_orders(
         self,
         date: datetime,

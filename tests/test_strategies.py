@@ -23,17 +23,36 @@ def test_buy_and_hold_generates_initial_orders():
 
 def test_trend_filter_uses_available_history_only():
     dates = pd.bdate_range("2024-01-01", periods=220)
-    history = pd.DataFrame({"SPY": range(100, 320), "BND": [80.0] * 220, "QQQ": [100.0] * 220, "GLD": [120.0] * 220}, index=dates)
-    state = PortfolioState(date=dates[-1].to_pydatetime(), cash=100000, positions={}, total_value=100000, weights={"cash": 1.0})
+    history = pd.DataFrame(
+        {"SPY": range(100, 320), "BND": [80.0] * 220, "QQQ": [100.0] * 220, "GLD": [120.0] * 220},
+        index=dates,
+    )
+    state = PortfolioState(
+        date=dates[-1].to_pydatetime(),
+        cash=100000,
+        positions={},
+        total_value=100000,
+        weights={"cash": 1.0},
+    )
     config = load_strategy_config("trend_filter") | {"target_weights": {"SPY": 0.5, "BND": 0.5}}
-    orders = TrendFilterStrategy().generate_orders(dates[-1].to_pydatetime(), state, history, config)
+    orders = TrendFilterStrategy().generate_orders(
+        dates[-1].to_pydatetime(), state, history, config
+    )
     assert orders
 
 
 def test_drawdown_rule_triggers_at_threshold():
     dates = pd.bdate_range("2024-01-01", periods=4)
     history = pd.DataFrame({"SPY": [100.0, 105.0, 90.0, 84.0]}, index=dates)
-    state = PortfolioState(date=dates[-1].to_pydatetime(), cash=100000, positions={}, total_value=100000, weights={"cash": 1.0})
+    state = PortfolioState(
+        date=dates[-1].to_pydatetime(),
+        cash=100000,
+        positions={},
+        total_value=100000,
+        weights={"cash": 1.0},
+    )
     config = load_strategy_config("drawdown_buy")
-    orders = DrawdownBuyStrategy().generate_orders(dates[-1].to_pydatetime(), state, history, config)
+    orders = DrawdownBuyStrategy().generate_orders(
+        dates[-1].to_pydatetime(), state, history, config
+    )
     assert orders

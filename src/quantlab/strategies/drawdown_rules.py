@@ -17,6 +17,22 @@ class DrawdownBuyStrategy(Strategy):
         super().__init__()
         self.fired_thresholds: set[float] = set()
 
+    def describe(self, config: dict[str, Any]) -> dict[str, str]:
+        reference_asset = config.get("reference_asset", "SPY")
+        return {
+            "objective": (
+                "Simulate disciplined incremental buying during reference-asset drawdowns."
+            ),
+            "entry_rule": f"Track {reference_asset} peak-to-current drawdown thresholds.",
+            "exit_or_rebalance_rule": (
+                "Each configured trigger fires once unless reset rules are added later."
+            ),
+            "risk_control": (
+                "Uses cash-constrained simulated orders and records large drawdown reviews."
+            ),
+            "known_limitations": "No valuation model and no repeated trigger reset logic in V0.2.",
+        }
+
     def generate_orders(
         self,
         date: datetime,
@@ -27,7 +43,7 @@ class DrawdownBuyStrategy(Strategy):
         reference_asset = config.get("reference_asset", "SPY")
         if reference_asset not in price_history.columns:
             return []
-        series = price_history.loc[:pd.Timestamp(date), reference_asset].dropna()
+        series = price_history.loc[: pd.Timestamp(date), reference_asset].dropna()
         if series.empty:
             return []
 
@@ -36,7 +52,9 @@ class DrawdownBuyStrategy(Strategy):
         drawdown = 0.0 if peak == 0 else 1 - current / peak
         orders: list[Order] = []
 
-        for trigger in sorted(config.get("drawdown_triggers", []), key=lambda item: item["drawdown"]):
+        for trigger in sorted(
+            config.get("drawdown_triggers", []), key=lambda item: item["drawdown"]
+        ):
             threshold = float(trigger["drawdown"])
             if drawdown < threshold or threshold in self.fired_thresholds:
                 continue

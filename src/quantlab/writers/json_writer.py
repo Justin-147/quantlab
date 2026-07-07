@@ -20,7 +20,7 @@ def _jsonable(value: Any) -> Any:
         if hasattr(value, "model_dump"):
             return value.model_dump(mode="json")
         return _jsonable(value.dict())
-    if isinstance(value, (datetime, date)):
+    if isinstance(value, datetime | date):
         return value.isoformat()
     if isinstance(value, dict):
         return {str(k): _jsonable(v) for k, v in value.items()}

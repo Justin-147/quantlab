@@ -17,6 +17,19 @@ class PeriodicRebalanceStrategy(Strategy):
         super().__init__()
         self.last_rebalance_period: tuple[int, int] | None = None
 
+    def describe(self, config: dict[str, Any]) -> dict[str, str]:
+        frequency = config.get("rebalance_frequency", "monthly")
+        threshold = config.get("rebalance_threshold", 0.05)
+        return {
+            "objective": "Keep portfolio weights close to the configured target allocation.",
+            "entry_rule": (
+                "Invest according to target weights at the first available simulated execution."
+            ),
+            "exit_or_rebalance_rule": f"Rebalance {frequency} and when drift exceeds {threshold}.",
+            "risk_control": "No leverage; tiny trades are ignored and cash constrains buys.",
+            "known_limitations": "Can add turnover and costs in volatile sideways markets.",
+        }
+
     def generate_orders(
         self,
         date: datetime,

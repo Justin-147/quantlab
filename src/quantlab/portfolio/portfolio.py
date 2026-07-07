@@ -1,7 +1,7 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import datetime
-from typing import Mapping
 
 from quantlab.models import PortfolioConfig, PortfolioState, Position
 from quantlab.portfolio.valuation import calculate_total_value, calculate_weights

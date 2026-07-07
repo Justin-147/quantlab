@@ -1,22 +1,55 @@
 {
-  "account_id": "paper_growth_balanced_0a8f647e",
+  "account_id": "paper_growth_balanced_fa279e29",
   "date": "2025-12-31T00:00:00",
   "cash": 100000.0,
   "positions": {},
-  "pending_orders": [],
-  "fills": [],
-  "equity_history": [
+  "pending_orders": [
     {
-      "date": "2025-12-31",
-      "cash": 100000.0,
-      "market_value": 0,
-      "total_value": 100000.0
+      "id": "0dde94f1-7021-40c8-acac-9ba02e850c83",
+      "date": "2025-12-31T00:00:00",
+      "symbol": "BND",
+      "side": "buy",
+      "quantity": 174.96067758771215,
+      "order_type": "market",
+      "reason": "trend filter risk_on",
+      "status": "pending"
+    },
+    {
+      "id": "ceb235e8-f31f-4ed0-9b52-c129a7cdf60a",
+      "date": "2025-12-31T00:00:00",
+      "symbol": "GLD",
+      "side": "buy",
+      "quantity": 72.2833739565895,
+      "order_type": "market",
+      "reason": "trend filter risk_on",
+      "status": "pending"
+    },
+    {
+      "id": "3b13c030-7698-4765-beef-f65b9bc3e865",
+      "date": "2025-12-31T00:00:00",
+      "symbol": "SPY",
+      "side": "buy",
+      "quantity": 156.20232574849553,
+      "order_type": "market",
+      "reason": "trend filter risk_on",
+      "status": "pending"
+    },
+    {
+      "id": "21f830d8-3c36-4962-865a-72e6798c9afd",
+      "date": "2025-12-31T00:00:00",
+      "symbol": "QQQ",
+      "side": "buy",
+      "quantity": 14.51966339935521,
+      "order_type": "market",
+      "reason": "trend filter risk_on",
+      "status": "pending"
     }
   ],
+  "fills": [],
+  "equity_history": [],
   "risk_status": "ok",
   "notes": [
     "Local paper simulation only. No broker connection exists.",
-    "Paper day processed locally; no real orders were submitted.",
-    "Strategy selected for paper review: trend_filter"
+    "paper_mode=local_simulation_only; broker_connection=disabled"
   ]
 }

@@ -7,14 +7,17 @@ from uuid import uuid4
 
 from quantlab.models import PaperAccountState, PortfolioConfig, model_to_dict
 
-
 PAPER_DIR = Path("data/paper_accounts")
 
 
-def initialize_paper_account(portfolio_config: PortfolioConfig) -> PaperAccountState:
+def initialize_paper_account(
+    portfolio_config: PortfolioConfig,
+    account_id: str | None = None,
+    as_of: datetime | None = None,
+) -> PaperAccountState:
     return PaperAccountState(
-        account_id=f"paper_{portfolio_config.name}_{uuid4().hex[:8]}",
-        date=datetime.now(),
+        account_id=account_id or f"paper_{portfolio_config.name}_{uuid4().hex[:8]}",
+        date=as_of or datetime.now(),
         cash=float(portfolio_config.initial_cash),
         positions={},
         risk_status="ok",
@@ -22,7 +25,12 @@ def initialize_paper_account(portfolio_config: PortfolioConfig) -> PaperAccountS
     )
 
 
-def run_paper_day(account_state: PaperAccountState, date, prices, strategy=None) -> PaperAccountState:
+def run_paper_day(
+    account_state: PaperAccountState,
+    date,
+    prices,
+    strategy=None,
+) -> PaperAccountState:
     account_state.date = date if isinstance(date, datetime) else datetime.fromisoformat(str(date))
     total_positions = sum(
         position.quantity * float(prices.get(symbol, 0.0))

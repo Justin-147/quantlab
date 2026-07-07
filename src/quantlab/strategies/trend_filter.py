@@ -18,6 +18,17 @@ class TrendFilterStrategy(Strategy):
         self.last_signal: str | None = None
         self.last_switch_date: pd.Timestamp | None = None
 
+    def describe(self, config: dict[str, Any]) -> dict[str, str]:
+        signal_asset = config.get("signal_asset", "SPY")
+        window = config.get("moving_average_window", 200)
+        return {
+            "objective": "Reduce risk exposure when the reference market trend weakens.",
+            "entry_rule": f"Use {signal_asset} price relative to its {window}-day moving average.",
+            "exit_or_rebalance_rule": "Switch between risk-on and risk-off weights after cooldown.",
+            "risk_control": "Signal uses only available historical data through the current date.",
+            "known_limitations": "Moving-average filters can whipsaw during range-bound markets.",
+        }
+
     def generate_orders(
         self,
         date: datetime,
@@ -39,7 +50,9 @@ class TrendFilterStrategy(Strategy):
             moving_average = float(series.rolling(window).mean().iloc[-1])
             last_price = float(series.iloc[-1])
             signal = "risk_on" if last_price >= moving_average else "risk_off"
-            target_weights = config.get("risk_on_weights" if signal == "risk_on" else "risk_off_weights", {})
+            target_weights = config.get(
+                "risk_on_weights" if signal == "risk_on" else "risk_off_weights", {}
+            )
 
         can_switch = True
         if self.last_switch_date is not None and self.last_signal != signal:
@@ -52,7 +65,10 @@ class TrendFilterStrategy(Strategy):
             self.last_signal = signal
             self.last_switch_date = current_date
         elif self.last_signal != signal and not can_switch:
-            target_weights = config.get("risk_on_weights" if self.last_signal == "risk_on" else "risk_off_weights", target_weights)
+            target_weights = config.get(
+                "risk_on_weights" if self.last_signal == "risk_on" else "risk_off_weights",
+                target_weights,
+            )
 
         prices = history.loc[current_date].to_dict()
         return target_weight_orders(

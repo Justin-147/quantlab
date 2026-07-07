@@ -1,10 +1,11 @@
 from __future__ import annotations
 
+import math
+from collections.abc import Mapping
 from datetime import datetime
-from typing import Mapping
 
 from quantlab.backtest.transaction_costs import calculate_transaction_costs
-from quantlab.models import Fill, Order, Position
+from quantlab.models import Fill, Order, OrderEvent, Position
 
 
 def execute_orders(
@@ -16,28 +17,63 @@ def execute_orders(
     transaction_cost_bps: float = 5,
     slippage_bps: float = 5,
     min_quantity: float = 1e-8,
-) -> tuple[float, dict[str, Position], list[Fill]]:
+) -> tuple[float, dict[str, Position], list[Fill], list[OrderEvent]]:
     updated_positions = dict(positions)
     updated_cash = float(cash)
     fills: list[Fill] = []
+    events: list[OrderEvent] = []
 
     for order in orders:
         if order.symbol not in prices:
+            events.append(_event(date, order, "missing_price", "No execution price available"))
             continue
         price = float(prices[order.symbol])
-        if price <= 0:
+        if price <= 0 or not math.isfinite(price):
+            events.append(
+                _event(
+                    date,
+                    order,
+                    "invalid_price",
+                    "Execution price is invalid",
+                    {"price": price},
+                )
+            )
             continue
 
         quantity = max(0.0, float(order.quantity))
         if order.side == "sell":
             held = updated_positions.get(order.symbol)
-            quantity = min(quantity, held.quantity if held else 0.0)
+            held_quantity = held.quantity if held else 0.0
+            if quantity > held_quantity:
+                events.append(
+                    _event(
+                        date,
+                        order,
+                        "insufficient_position",
+                        "Sell quantity exceeded current position and was reduced",
+                        {"requested_quantity": quantity, "held_quantity": held_quantity},
+                    )
+                )
+            quantity = min(quantity, held_quantity)
         else:
             cost_rate = (transaction_cost_bps + slippage_bps) / 10_000
             affordable_qty = updated_cash / (price * (1 + cost_rate))
+            if quantity > affordable_qty:
+                events.append(
+                    _event(
+                        date,
+                        order,
+                        "insufficient_cash",
+                        "Buy quantity was reduced to avoid negative cash",
+                        {"requested_quantity": quantity, "affordable_quantity": affordable_qty},
+                    )
+                )
             quantity = min(quantity, affordable_qty)
 
         if quantity <= min_quantity:
+            events.append(
+                _event(date, order, "quantity_too_small", "Executable quantity is too small")
+            )
             continue
 
         notional = quantity * price
@@ -51,8 +87,13 @@ def execute_orders(
         if order.side == "buy":
             cash_impact = notional + total_fee
             if cash_impact > updated_cash + 1e-6:
+                events.append(
+                    _event(date, order, "insufficient_cash", "Buy order rejected due to cash")
+                )
                 continue
             updated_cash -= cash_impact
+            if abs(updated_cash) <= 1e-9:
+                updated_cash = 0.0
             updated_positions = _apply_buy(updated_positions, order.symbol, quantity, price)
             total_cost = cash_impact
         else:
@@ -74,8 +115,34 @@ def execute_orders(
                 total_cost=total_cost,
             )
         )
+        events.append(
+            _event(
+                date,
+                order,
+                "executed",
+                "Order executed",
+                {"quantity": quantity, "price": price},
+            )
+        )
 
-    return updated_cash, updated_positions, fills
+    return updated_cash, updated_positions, fills, events
+
+
+def _event(
+    date: datetime,
+    order: Order,
+    event_type: str,
+    message: str,
+    metadata: dict | None = None,
+) -> OrderEvent:
+    return OrderEvent(
+        date=date,
+        order_id=order.id,
+        symbol=order.symbol,
+        event_type=event_type,
+        message=message,
+        metadata=metadata or {},
+    )
 
 
 def _apply_buy(

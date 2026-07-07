@@ -1,7 +1,7 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import datetime
-from typing import Mapping
 from uuid import uuid4
 
 from quantlab.models import Order, PortfolioState
@@ -19,24 +19,21 @@ def target_weight_orders(
     if total_value <= 0:
         return []
 
+    symbols = set(target_weights) | set(portfolio_state.positions)
     current_values = {
-        symbol: portfolio_state.positions.get(symbol).quantity * float(prices[symbol])
-        if symbol in portfolio_state.positions and symbol in prices
-        else 0.0
-        for symbol in target_weights
+        symbol: _position_value(portfolio_state, symbol, prices)
+        for symbol in symbols
     }
-    current_weights = {
-        symbol: value / total_value
-        for symbol, value in current_values.items()
-    }
+    current_weights = {symbol: value / total_value for symbol, value in current_values.items()}
 
     sells: list[Order] = []
     buys: list[tuple[str, float]] = []
     cash_after_sells = float(portfolio_state.cash)
 
-    for symbol, target_weight in target_weights.items():
+    for symbol in symbols:
         if symbol not in prices:
             continue
+        target_weight = float(target_weights.get(symbol, 0.0))
         current_weight = current_weights.get(symbol, 0.0)
         weight_diff = float(target_weight) - current_weight
         if abs(weight_diff) < threshold:
@@ -46,7 +43,12 @@ def target_weight_orders(
             continue
         price = float(prices[symbol])
         if notional_diff < 0:
-            quantity = min(abs(notional_diff) / price, portfolio_state.positions.get(symbol).quantity if symbol in portfolio_state.positions else 0.0)
+            position = portfolio_state.positions.get(symbol)
+            held_quantity = position.quantity if position is not None else 0.0
+            quantity = min(
+                abs(notional_diff) / price,
+                held_quantity,
+            )
             if quantity > 0:
                 cash_after_sells += quantity * price
                 sells.append(_order(portfolio_state.date, symbol, "sell", quantity, reason))
@@ -56,11 +58,28 @@ def target_weight_orders(
     total_buy_notional = sum(notional for _, notional in buys)
     buy_scale = min(1.0, cash_after_sells / total_buy_notional) if total_buy_notional > 0 else 1.0
     buy_orders = [
-        _order(portfolio_state.date, symbol, "buy", (notional * buy_scale) / float(prices[symbol]), reason)
+        _order(
+            portfolio_state.date,
+            symbol,
+            "buy",
+            (notional * buy_scale) / float(prices[symbol]),
+            reason,
+        )
         for symbol, notional in buys
         if notional * buy_scale >= min_notional
     ]
     return sells + buy_orders
+
+
+def _position_value(
+    portfolio_state: PortfolioState,
+    symbol: str,
+    prices: Mapping[str, float],
+) -> float:
+    position = portfolio_state.positions.get(symbol)
+    if position is None or symbol not in prices:
+        return 0.0
+    return position.quantity * float(prices[symbol])
 
 
 def _order(date: datetime, symbol: str, side: str, quantity: float, reason: str) -> Order:

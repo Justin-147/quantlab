@@ -14,7 +14,8 @@ def summarize_exposure(
     for symbol, weight in weights.items():
         if symbol == "cash":
             continue
-        asset_class = assets.get(symbol).asset_class if symbol in assets else "other"
+        asset = assets.get(symbol)
+        asset_class = asset.asset_class if asset is not None else "other"
         if asset_class == "equity":
             equity += weight
         elif asset_class == "bond":

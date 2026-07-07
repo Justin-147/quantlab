@@ -11,7 +11,9 @@ import pandas as pd
 from quantlab.models import BacktestResult
 
 
-def build_backtest_charts(result: BacktestResult, output_dir: str | Path = "reports/charts") -> dict[str, Path]:
+def build_backtest_charts(
+    result: BacktestResult, output_dir: str | Path = "reports/charts"
+) -> dict[str, Path]:
     output = Path(output_dir)
     output.mkdir(parents=True, exist_ok=True)
     stem = f"{result.portfolio_name}_{result.strategy_name}"

@@ -12,7 +12,9 @@ def calculate_drawdown_curve(equity_curve: list[dict] | pd.DataFrame) -> pd.Data
     df[value_col] = pd.to_numeric(df[value_col])
     df["running_peak"] = df[value_col].cummax()
     df["drawdown"] = df[value_col] / df["running_peak"] - 1.0
-    return df[["date", value_col, "running_peak", "drawdown"]].rename(columns={value_col: "total_value"})
+    return df[["date", value_col, "running_peak", "drawdown"]].rename(
+        columns={value_col: "total_value"}
+    )
 
 
 def max_drawdown(equity_curve: list[dict] | pd.DataFrame) -> float:

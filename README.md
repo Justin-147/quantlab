@@ -1,47 +1,38 @@
 # QuantLab: Portfolio Backtesting & Paper Trading Research System
 
-QuantLab is a local-first portfolio research system for backtesting systematic allocation rules, comparing strategies, simulating paper portfolios, and analyzing risk metrics such as drawdown, volatility, Sharpe ratio, turnover, and exposure.
+[![tests](https://github.com/Justin-147/quantlab/actions/workflows/tests.yml/badge.svg)](https://github.com/Justin-147/quantlab/actions/workflows/tests.yml)
+![Python](https://img.shields.io/badge/python-3.11%2B-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
 
-It is designed for research and education only. It does not provide investment advice, trading advice, automated broker execution, or return guarantees.
+**Research and education only. QuantLab is not investment advice, trading advice, a broker integration, or a real-money trading bot.**
+
+QuantLab is a local-first portfolio research system for backtesting systematic allocation rules, comparing strategies, simulating local paper portfolios, and analyzing risk metrics such as drawdown, volatility, Sharpe ratio, turnover, exposure, benchmark tracking, VaR, and CVaR.
 
 ## What It Does
 
-- Loads historical or synthetic daily price CSV data.
-- Builds synthetic portfolio configurations.
+- Loads and validates daily price CSV data.
+- Generates deterministic synthetic sample data.
+- Validates assets, portfolios, strategies, and risk limits.
 - Runs buy-and-hold, periodic rebalance, trend-filter, and drawdown-trigger strategies.
-- Models transaction costs and slippage.
+- Supports configurable execution lag, transaction cost, and slippage assumptions.
+- Records fills, order events, risk events, equity, drawdown, exposure, and benchmark metrics.
 - Generates JSON, Markdown, HTML, and chart reports.
-- Simulates a local paper account without broker connectivity.
-- Provides a simple Streamlit dashboard.
-- Includes pytest coverage for the core workflow.
+- Runs a local paper simulation with broker execution disabled.
+- Provides a Streamlit dashboard.
+- Speeds up repeated dashboard runs with cached data, cached fast-mode results, and session state.
 
 ## What It Does Not Do
 
-QuantLab V1 does not trade live capital, connect to brokers, use leverage, trade options or margin, provide buy or sell recommendations, or claim that past performance predicts future results.
-
-## Architecture
-
-```text
-config/          Portfolio, asset, strategy, risk, and backtest settings
-examples/        Synthetic data, sample configs, curated reports, sample outputs
-src/quantlab/    Data, portfolio, strategy, backtest, risk, paper, report, CLI, dashboard code
-tests/           Unit and workflow tests
-```
+QuantLab does not connect to brokers, submit orders, use leverage, trade options or margin, scrape paid data, store API keys, provide buy/sell recommendations, or guarantee returns.
 
 ## Quick Start
 
 ```powershell
 cd D:\CodexWork\quantlab
-python -m pip install -e .
-python -m quantlab.main generate-sample-data
-python -m quantlab.main backtest --portfolio growth_balanced --strategy periodic_rebalance --data examples/sample_data/prices_sample.csv
-```
-
-If you prefer not to install the package, run commands with `PYTHONPATH` pointing at `src`.
-
-```powershell
-$env:PYTHONPATH="src"
-python -m quantlab.main backtest --portfolio growth_balanced --strategy periodic_rebalance --data examples/sample_data/prices_sample.csv
+python -m pip install -e .[dev]
+python -m quantlab.main validate
+python -m quantlab.main validate-data --data examples/sample_data/prices_sample.csv
+python -m quantlab.main backtest --portfolio growth_balanced --strategy periodic_rebalance --data examples/sample_data/prices_sample.csv --as-of 2026-07-06 --output-root .tmp/demo
 ```
 
 ## CLI Commands
@@ -52,22 +43,29 @@ Generate sample data:
 python -m quantlab.main generate-sample-data
 ```
 
+Validate configs and data:
+
+```powershell
+python -m quantlab.main validate
+python -m quantlab.main validate-data --data examples/sample_data/prices_sample.csv
+```
+
 Run one backtest:
 
 ```powershell
-python -m quantlab.main backtest --portfolio growth_balanced --strategy periodic_rebalance --data examples/sample_data/prices_sample.csv
+python -m quantlab.main backtest --portfolio growth_balanced --strategy periodic_rebalance --data examples/sample_data/prices_sample.csv --as-of 2026-07-06 --output-root .tmp/backtest
 ```
 
 Compare strategies:
 
 ```powershell
-python -m quantlab.main compare --portfolio growth_balanced --strategies buy_and_hold periodic_rebalance trend_filter --data examples/sample_data/prices_sample.csv
+python -m quantlab.main compare --portfolio growth_balanced --strategies buy_and_hold periodic_rebalance trend_filter --data examples/sample_data/prices_sample.csv --as-of 2026-07-06 --output-root .tmp/compare
 ```
 
 Run local paper simulation:
 
 ```powershell
-python -m quantlab.main paper-run --portfolio growth_balanced --strategy trend_filter --data examples/sample_data/prices_sample.csv
+python -m quantlab.main paper-run --portfolio growth_balanced --strategy trend_filter --data examples/sample_data/prices_sample.csv --as-of 2026-07-06 --output-root .tmp/paper
 ```
 
 Start the dashboard:
@@ -76,6 +74,8 @@ Start the dashboard:
 streamlit run src/quantlab/dashboard/app.py
 ```
 
+Fast mode is enabled by default in the dashboard. The first run loads data and computes the result; repeated runs with the same inputs reuse cached data and cached JSON-safe backtest output.
+
 ## Strategies
 
 - `buy_and_hold`: invest once according to target weights.
@@ -83,24 +83,24 @@ streamlit run src/quantlab/dashboard/app.py
 - `trend_filter`: switch between risk-on and risk-off weights using a moving average signal.
 - `drawdown_buy`: simulate adding exposure when reference-asset drawdown thresholds are reached.
 
-## Risk Metrics
+## Documentation
 
-QuantLab calculates total return, annualized return, annualized volatility, Sharpe ratio, Sortino ratio, max drawdown, Calmar ratio, daily win rate, best and worst day, turnover, number of trades, and final value.
+- [Methodology](docs/methodology.md)
+- [Backtest Assumptions](docs/backtest_assumptions.md)
+- [Input Schema](docs/input_schema.md)
+- [Safety Boundary](docs/safety_boundary.md)
+- [Dashboard Performance](docs/dashboard_performance.md)
+- [Changelog](CHANGELOG.md)
+- [Roadmap](docs/roadmap.md)
+- [GitHub About](docs/github_about.md)
 
-## Limitations
+## Tests and Demo
 
-- Synthetic sample data is for testing and demonstration only.
-- Backtests are historical simulations and may contain modeling assumptions.
-- Transaction cost and slippage assumptions are simplified.
-- Paper trading is local simulation only.
-- No real-money order execution exists in V1.
+```powershell
+pytest
+python scripts/run_demo.py
+```
 
 ## Disclaimer
 
 This project is for research and education only. It is not investment advice. It is not trading advice. It does not provide recommendations to buy or sell securities. It does not execute real-money trades. Past performance does not guarantee future results.
-
-## Tests
-
-```powershell
-pytest
-```

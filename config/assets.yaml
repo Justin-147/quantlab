@@ -2,24 +2,30 @@ assets:
   SPY:
     name: SPDR S&P 500 ETF Trust
     asset_class: equity
+    sector: broad_market
     currency: USD
   QQQ:
     name: Invesco QQQ Trust
     asset_class: equity
+    sector: technology
     currency: USD
   BND:
     name: Vanguard Total Bond Market ETF
     asset_class: bond
+    sector: fixed_income
     currency: USD
   GLD:
     name: SPDR Gold Shares
     asset_class: gold
+    sector: commodity
     currency: USD
   NVDA:
     name: NVIDIA
     asset_class: equity
+    sector: technology
     currency: USD
   MSFT:
     name: Microsoft
     asset_class: equity
+    sector: technology
     currency: USD

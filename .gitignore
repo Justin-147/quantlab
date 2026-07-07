@@ -13,5 +13,10 @@ reports/html/
 reports/json/
 reports/charts/
 logs/
+.tmp/
+dist/
+build/
+htmlcov/
+coverage.xml
 review_*.txt
 *_review_bundle*.md

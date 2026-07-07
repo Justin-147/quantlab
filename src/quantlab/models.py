@@ -22,6 +22,7 @@ class AssetConfig(BaseModel):
     symbol: str
     name: str
     asset_class: str
+    sector: str | None = None
     currency: str = "USD"
 
 
@@ -94,6 +95,15 @@ class Fill(BaseModel):
     total_cost: float
 
 
+class OrderEvent(BaseModel):
+    date: datetime
+    order_id: str | None = None
+    symbol: str | None = None
+    event_type: str
+    message: str
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
 class BacktestResult(BaseModel):
     portfolio_name: str
     strategy_name: str
@@ -104,6 +114,7 @@ class BacktestResult(BaseModel):
     equity_curve: list[dict[str, Any]]
     drawdown_curve: list[dict[str, Any]]
     fills: list[Fill]
+    order_events: list[OrderEvent] = Field(default_factory=list)
     metrics: dict[str, float]
     exposures: list[dict[str, Any]]
     risk_events: list[dict[str, Any]]
