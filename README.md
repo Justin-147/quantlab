@@ -120,3 +120,4 @@ Current release: `v0.2.0`.
 QuantLab v0.2.0 is a local-first portfolio backtesting and paper trading research system. It supports deterministic backtests, isolated output roots, strategy comparison, risk metrics, local paper simulation, generated reports, and a Streamlit dashboard.
 
 This project is for research and education only. It is not investment advice, trading advice, a broker integration, or a real-money trading bot.
+
