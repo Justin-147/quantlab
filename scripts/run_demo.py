@@ -4,7 +4,9 @@ import subprocess
 import sys
 
 COMMANDS = [
-    [sys.executable, "-m", "compileall", "src", "tests"],
+    [sys.executable, "-m", "ruff", "check", "."],
+    [sys.executable, "-m", "compileall", "src", "tests", "scripts"],
+    [sys.executable, "-m", "mypy", "src/quantlab"],
     [sys.executable, "-m", "pytest"],
     [sys.executable, "-m", "quantlab.main", "validate"],
     [
@@ -42,6 +44,7 @@ COMMANDS = [
         "buy_and_hold",
         "periodic_rebalance",
         "trend_filter",
+        "drawdown_buy",
         "--data",
         "examples/sample_data/prices_sample.csv",
         "--as-of",
@@ -65,6 +68,8 @@ COMMANDS = [
         "--output-root",
         ".tmp/demo",
     ],
+    [sys.executable, "scripts/verify_line_endings.py"],
+    [sys.executable, "-m", "build"],
 ]
 
 

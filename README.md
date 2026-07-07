@@ -4,6 +4,8 @@
 ![Python](https://img.shields.io/badge/python-3.11%2B-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
+Current release: **V0.2.0**.
+
 **Research and education only. QuantLab is not investment advice, trading advice, a broker integration, or a real-money trading bot.**
 
 QuantLab is a local-first portfolio research system for backtesting systematic allocation rules, comparing strategies, simulating local paper portfolios, and analyzing risk metrics such as drawdown, volatility, Sharpe ratio, turnover, exposure, benchmark tracking, VaR, and CVaR.
@@ -74,7 +76,7 @@ Start the dashboard:
 streamlit run src/quantlab/dashboard/app.py
 ```
 
-Fast mode is enabled by default in the dashboard. The first run loads data and computes the result; repeated runs with the same inputs reuse cached data and cached JSON-safe backtest output.
+Fast mode is enabled by default in the dashboard. The first run loads data and computes the backtest. Repeated runs with the same inputs reuse cached data and cached JSON-safe backtest output. If the CSV file changes, the dashboard input signature includes file size and modified time, so the cache refreshes for the changed file.
 
 ## Strategies
 
@@ -97,8 +99,12 @@ Fast mode is enabled by default in the dashboard. The first run loads data and c
 ## Tests and Demo
 
 ```powershell
+ruff check .
+python -m compileall src tests scripts
+mypy src/quantlab
 pytest
 python scripts/run_demo.py
+python -m build
 ```
 
 ## Disclaimer

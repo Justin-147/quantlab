@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "quantlab"
-version = "0.1.0"
+version = "0.2.0"
 description = "Local-first portfolio backtesting and paper trading research system."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -16,7 +16,7 @@ dependencies = [
   "matplotlib>=3.7",
   "Jinja2>=3",
   "markdown>=3",
-  "streamlit>=1.30",
+  "streamlit>=1.58",
 ]
 
 [project.optional-dependencies]

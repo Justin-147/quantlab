@@ -6,6 +6,7 @@ import pandas as pd
 
 from quantlab.dashboard.helpers import (
     build_input_signature,
+    file_signature,
     filter_price_data,
     limit_trades,
     result_to_frames,
@@ -61,6 +62,15 @@ def test_input_signature_is_stable():
         "benchmark_symbol": "SPY",
     }
     assert build_input_signature(**args) == build_input_signature(**dict(reversed(args.items())))
+
+
+def test_file_signature_includes_size_and_mtime(tmp_path):
+    path = tmp_path / "prices.csv"
+    path.write_text("date,symbol\n2026-07-06,SPY\n", encoding="utf-8")
+    signature = file_signature(str(path))
+    assert signature["path"] == str(path)
+    assert signature["size"] == path.stat().st_size
+    assert isinstance(signature["mtime_ns"], int)
 
 
 def test_safe_metric_value_formats_missing_and_percent():

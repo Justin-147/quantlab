@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Any
 
 from quantlab.models import BacktestResult, PaperAccountState
-from quantlab.writers.formatting import fmt_number, fmt_pct, md_cell
+from quantlab.writers.formatting import fmt_number, fmt_pct, md_cell, md_text
 
 DISCLAIMER = (
     "This report is for research and education only. It is not investment advice, "
@@ -22,15 +22,17 @@ def build_backtest_report(
     chart_paths = chart_paths or {}
     report_date = report_date or datetime.now()
     metrics = result.metrics
+    portfolio_name = md_text(result.portfolio_name)
+    strategy_name = md_text(result.strategy_name)
     lines = [
         (
-            f"# QuantLab Backtest Report | {result.portfolio_name} | "
-            f"{result.strategy_name} | {report_date:%Y-%m-%d}"
+            f"# QuantLab Backtest Report | {portfolio_name} | "
+            f"{strategy_name} | {report_date:%Y-%m-%d}"
         ),
         "",
         "## Executive Summary",
-        f"- Portfolio: {result.portfolio_name}",
-        f"- Strategy: {result.strategy_name}",
+        f"- Portfolio: {portfolio_name}",
+        f"- Strategy: {strategy_name}",
         f"- Total return: {_pct(metrics.get('total_return', 0))}",
         f"- Annualized return: {_pct(metrics.get('annualized_return', 0))}",
         f"- Volatility: {_pct(metrics.get('annualized_volatility', 0))}",
@@ -63,10 +65,10 @@ def build_backtest_report(
             f"| turnover | {_number(metrics.get('turnover', 0))} |",
             "",
             "## Equity Curve",
-            f"Chart: {chart_paths.get('equity', 'reports/charts/equity.png')}",
+            f"Chart: {md_text(chart_paths.get('equity', 'reports/charts/equity.png'))}",
             "",
             "## Drawdown Analysis",
-            f"Chart: {chart_paths.get('drawdown', 'reports/charts/drawdown.png')}",
+            f"Chart: {md_text(chart_paths.get('drawdown', 'reports/charts/drawdown.png'))}",
             "",
             "## Trade Summary",
             (
@@ -107,7 +109,7 @@ def build_backtest_report(
             "- cash exposure",
             (
                 "- top asset weights chart: "
-                f"{chart_paths.get('weights', 'reports/charts/weights.png')}"
+                f"{md_text(chart_paths.get('weights', 'reports/charts/weights.png'))}"
             ),
             "",
             "## Strategy Interpretation",
@@ -147,8 +149,9 @@ def build_comparison_report(
     report_date: datetime | None = None,
 ) -> str:
     report_date = report_date or datetime.now()
+    safe_portfolio_name = md_text(portfolio_name)
     lines = [
-        f"# QuantLab Strategy Comparison | {portfolio_name} | {report_date:%Y-%m-%d}",
+        f"# QuantLab Strategy Comparison | {safe_portfolio_name} | {report_date:%Y-%m-%d}",
         "",
         "## Summary",
         (
@@ -173,7 +176,7 @@ def build_comparison_report(
         [
             "",
             "## Chart",
-            f"Chart: {chart_path or 'reports/charts/strategy_comparison.png'}",
+            f"Chart: {md_text(chart_path or 'reports/charts/strategy_comparison.png')}",
             "",
             "## Disclaimer",
             DISCLAIMER,
@@ -184,8 +187,9 @@ def build_comparison_report(
 
 def build_paper_report(account: PaperAccountState, report_date: datetime | None = None) -> str:
     report_date = report_date or datetime.now()
+    account_id = md_text(account.account_id)
     lines = [
-        f"# QuantLab Paper Account Report | {account.account_id} | {report_date:%Y-%m-%d}",
+        f"# QuantLab Paper Account Report | {account_id} | {report_date:%Y-%m-%d}",
         "",
         "## Account Status",
         f"- Date: {account.date:%Y-%m-%d}",
@@ -193,11 +197,11 @@ def build_paper_report(account: PaperAccountState, report_date: datetime | None 
         f"- Positions: {len(account.positions)}",
         f"- Pending orders: {len(account.pending_orders)}",
         f"- Fills: {len(account.fills)}",
-        f"- Risk status: {account.risk_status}",
+        f"- Risk status: {md_text(account.risk_status)}",
         "",
         "## Notes",
     ]
-    lines.extend(f"- {note}" for note in account.notes)
+    lines.extend(f"- {md_text(note)}" for note in account.notes)
     lines.extend(["", "## Disclaimer", DISCLAIMER])
     return "\n".join(lines) + "\n"
 

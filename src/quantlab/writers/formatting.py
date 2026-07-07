@@ -2,12 +2,23 @@ from __future__ import annotations
 
 import math
 import re
+from html import escape
 
 
 def md_cell(value: object) -> str:
     if value is None:
         return ""
-    text = str(value).replace("\n", " ").replace("|", r"\|")
+    text = escape(str(value), quote=False)
+    text = text.replace("\r", " ").replace("\n", " ")
+    text = text.replace("|", r"\|")
+    return re.sub(r"\s+", " ", text).strip()
+
+
+def md_text(value: object) -> str:
+    if value is None:
+        return ""
+    text = escape(str(value), quote=False)
+    text = text.replace("\r", " ").replace("\n", " ")
     return re.sub(r"\s+", " ", text).strip()
 
 

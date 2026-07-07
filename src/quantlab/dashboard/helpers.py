@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import math
 from datetime import date
+from pathlib import Path
 from typing import Any
 
 import pandas as pd
@@ -30,6 +31,7 @@ def build_input_signature(
         "data_path": str(data_path),
         "end_date": str(end_date) if end_date is not None else None,
         "execution_lag_days": int(execution_lag_days),
+        "file_signature": file_signature(data_path),
         "portfolio_name": portfolio_name,
         "slippage_bps": float(slippage_bps),
         "start_date": str(start_date) if start_date is not None else None,
@@ -37,6 +39,18 @@ def build_input_signature(
         "transaction_cost_bps": float(transaction_cost_bps),
     }
     return json.dumps(payload, sort_keys=True, separators=(",", ":"))
+
+
+def file_signature(path: str) -> dict[str, object]:
+    file_path = Path(path)
+    if not file_path.exists():
+        return {"path": str(file_path), "mtime_ns": None, "size": None}
+    stat = file_path.stat()
+    return {
+        "path": str(file_path),
+        "mtime_ns": stat.st_mtime_ns,
+        "size": stat.st_size,
+    }
 
 
 def result_to_frames(result: dict[str, Any] | Any) -> dict[str, pd.DataFrame]:

@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.2.0 - Unreleased
+## 0.2.0 - 2026-07-07
 
 - Added deterministic report generation.
 - Added input and config validation.

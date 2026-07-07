@@ -4,6 +4,8 @@
 ![Python](https://img.shields.io/badge/python-3.11%2B-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
+当前版本：**V0.2.0**。
+
 **QuantLab 仅用于研究和教育。它不是投资建议、交易建议、券商接口，也不是实盘交易机器人。**
 
 QuantLab 是一个本地优先的投资组合研究系统，用于回测规则化资产配置策略、比较策略、模拟本地纸面账户，并分析回撤、波动率、夏普比率、换手率、资产暴露、基准跟踪、VaR 和 CVaR 等指标。
@@ -58,7 +60,7 @@ python -m quantlab.main backtest --portfolio growth_balanced --strategy periodic
 比较策略：
 
 ```powershell
-python -m quantlab.main compare --portfolio growth_balanced --strategies buy_and_hold periodic_rebalance trend_filter --data examples/sample_data/prices_sample.csv --as-of 2026-07-06 --output-root .tmp/compare
+python -m quantlab.main compare --portfolio growth_balanced --strategies buy_and_hold periodic_rebalance trend_filter drawdown_buy --data examples/sample_data/prices_sample.csv --as-of 2026-07-06 --output-root .tmp/compare
 ```
 
 运行本地纸面模拟：
@@ -73,7 +75,7 @@ python -m quantlab.main paper-run --portfolio growth_balanced --strategy trend_f
 streamlit run src/quantlab/dashboard/app.py
 ```
 
-Dashboard 默认启用 Fast mode。首次运行会加载数据并计算结果；相同输入再次运行时会复用缓存数据和 JSON-safe 回测结果。
+Dashboard 默认启用 Fast mode。首次运行会加载数据并计算回测；相同输入会复用缓存数据和 JSON-safe 回测结果。如果 CSV 文件内容变化，输入签名会包含文件大小和修改时间，因此缓存会随文件变化刷新。
 
 ## 文档
 
@@ -89,10 +91,14 @@ Dashboard 默认启用 Fast mode。首次运行会加载数据并计算结果；
 ## 测试和 Demo
 
 ```powershell
+ruff check .
+python -m compileall src tests scripts
+mypy src/quantlab
 pytest
 python scripts/run_demo.py
+python -m build
 ```
 
 ## 免责声明
 
-本项目仅用于研究和教育。它不是投资建议，不是交易建议，不提供买卖证券的推荐，不执行真实资金交易。历史表现不保证未来结果。
+本项目仅用于研究和教育。它不是投资建议，不是交易建议，不提供买卖证券的推荐，不连接券商，不提交真实订单，不执行真实资金交易。历史表现不保证未来结果。
